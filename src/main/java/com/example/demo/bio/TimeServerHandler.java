@@ -15,11 +15,9 @@
  */
 package com.example.demo.bio;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.time.ZonedDateTime;
 
 /**
  * @author Administrator
@@ -44,18 +42,26 @@ public class TimeServerHandler implements Runnable {
 		BufferedReader in = null;
 		PrintWriter out = null;
 		try {
-			in = new BufferedReader(new InputStreamReader(
-					this.socket.getInputStream()));
-			out = new PrintWriter(this.socket.getOutputStream(), true);
+			byte[] bytes = new byte[1024];
+			InputStream inputStream = socket.getInputStream();
+			OutputStream outputStream = socket.getOutputStream();
+			in = new BufferedReader(new InputStreamReader(inputStream));
+			out = new PrintWriter(outputStream, true);
 			String currentTime = null;
 			String body = null;
 			while (true) {
-				body = in.readLine();
-				if (body == null)
+
+				//读取数据（阻塞）
+				int read = inputStream.read(bytes);
+				if (read != -1) {
+					body = new String(bytes, 0, read);
+					System.out.println(body);
+				} else {
 					break;
+				}
+
 				System.out.println("The time server receive order : " + body);
-				currentTime = "QUERY TIME ORDER".equalsIgnoreCase(body) ? new java.util.Date(
-						System.currentTimeMillis()).toString() : "BAD ORDER";
+				currentTime = "QUERY TIME ORDER".equalsIgnoreCase(body) ? ZonedDateTime.now().toString() : "BAD ORDER";
 				out.println(currentTime);
 			}
 
